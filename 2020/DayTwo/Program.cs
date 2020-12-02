@@ -10,18 +10,24 @@ namespace DayTwo
         {
             var data = GetData();
             
-            var numberOfValidPasswords = CalculateNumberOfValidPasswords(data);
+            var numberOfValidPasswordsUsingCharacterCount = CalculateNumberOfValidPasswords(data, PasswordValidationMethod.CharacterCount);
             
-            Console.WriteLine($"There are {numberOfValidPasswords} valid passwords in the data set.");
+            Console.WriteLine("Invalid Passwords using Character Count Method:");
+            Console.WriteLine(numberOfValidPasswordsUsingCharacterCount);
+
+            var numberOfValidPasswordsUsingCharacterPosition = CalculateNumberOfValidPasswords(data, PasswordValidationMethod.CharacterPosition);
+
+            Console.WriteLine("Invalid Passwords using Character Position Method:");
+            Console.WriteLine(numberOfValidPasswordsUsingCharacterPosition);
         }
 
-        public static int CalculateNumberOfValidPasswords(List<string> data)
+        public static int CalculateNumberOfValidPasswords(List<string> data, PasswordValidationMethod passwordValidationMethod)
         {
             var invalidPasswordCount = 0;
 
             foreach (var item in data)
             {
-                var evaluatedPassword = EvaluatePassword(item);
+                var evaluatedPassword = EvaluatePassword(item, passwordValidationMethod);
 
                 if (evaluatedPassword.IsValid)
                 {
@@ -32,7 +38,7 @@ namespace DayTwo
             return invalidPasswordCount;
         }
 
-        public static PasswordEvaluation EvaluatePassword(string entry)
+        public static PasswordEvaluation EvaluatePassword(string entry, PasswordValidationMethod passwordValidationMethod)
         {
             var split = entry.Split(": ");
 
@@ -40,7 +46,7 @@ namespace DayTwo
 
             var rulesString = split[0];
 
-            var ruleSet = new RuleSet(rulesString);
+            var ruleSet = new RuleSet(rulesString, passwordValidationMethod);
 
             var evaluatedPassword = new PasswordEvaluation(password, ruleSet);
 
@@ -1057,14 +1063,18 @@ namespace DayTwo
 
     class RuleSet
     {
+        public PasswordValidationMethod PasswordValidationMethod { get; set; }
+
         public string Character { get; set; }
 
-        public int MinimumInstances { get; set; }
+        public int LowerBound { get; set; }
 
-        public int MaximumInstances { get; set; }
+        public int UpperBound { get; set; }
 
-        public RuleSet(string ruleString)
+        public RuleSet(string ruleString, PasswordValidationMethod passwordValidationMethod)
         {
+            PasswordValidationMethod = passwordValidationMethod;
+
             var instancesCharacterSplit = ruleString.Split(" ");
 
             Character = instancesCharacterSplit[1];
@@ -1073,9 +1083,9 @@ namespace DayTwo
 
             var instancesSplit = instances.Split("-");
 
-            MinimumInstances = int.Parse(instancesSplit[0]);
+            LowerBound = int.Parse(instancesSplit[0]);
 
-            MaximumInstances = int.Parse(instancesSplit[1]);
+            UpperBound = int.Parse(instancesSplit[1]);
         }
     }
 
@@ -1096,9 +1106,23 @@ namespace DayTwo
 
         private bool ValidatePassword()
         {
-            var characterCount = GetCharacterCount(Password);
+            switch (RuleSet.PasswordValidationMethod)
+            {
+                case PasswordValidationMethod.CharacterCount:
+                    var characterCount = GetCharacterCount(Password);
 
-            return characterCount.ContainsKey(RuleSet.Character) && characterCount[RuleSet.Character] <= RuleSet.MaximumInstances && characterCount[RuleSet.Character] >= RuleSet.MinimumInstances;
+                    return characterCount.ContainsKey(RuleSet.Character) && characterCount[RuleSet.Character] <= RuleSet.UpperBound && characterCount[RuleSet.Character] >= RuleSet.LowerBound;
+                case PasswordValidationMethod.CharacterPosition:
+                    var characterAtPositionOne = Password[RuleSet.LowerBound - 1].ToString();
+                    var characterAtPositionTwo = Password[RuleSet.UpperBound - 1].ToString();
+
+                    var positionOneMatch = characterAtPositionOne == RuleSet.Character; 
+                    var positionTwoMatch = characterAtPositionTwo == RuleSet.Character;
+
+                    return positionOneMatch != positionTwoMatch && (positionOneMatch || positionTwoMatch);
+                default:
+                    return false;
+            }
         }
 
         private Dictionary<string, int> GetCharacterCount(string text)
@@ -1121,5 +1145,11 @@ namespace DayTwo
 
             return characterCounts;
         }
+    }
+
+    enum PasswordValidationMethod
+    {
+        CharacterCount,
+        CharacterPosition
     }
 }
