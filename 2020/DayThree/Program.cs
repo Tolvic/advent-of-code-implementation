@@ -12,9 +12,15 @@ namespace DayThree
 
             var calculator = new TreeEncounterCalculator();
 
-            var numberOfTrees = calculator.CalculateNumberOfTreesInPath(rawData, 3, 1);
+            var numberOfTreesOne = (ulong)calculator.CalculateNumberOfTreesInPath(rawData, 1, 1);
+            var numberOfTreesTwo = (ulong)calculator.CalculateNumberOfTreesInPath(rawData, 3, 1);
+            var numberOfTreesThree = (ulong)calculator.CalculateNumberOfTreesInPath(rawData, 5, 1);
+            var numberOfTreesFour = (ulong)calculator.CalculateNumberOfTreesInPath(rawData, 7, 1);
+            var numberOfTreesFive = (ulong)calculator.CalculateNumberOfTreesInPath(rawData, 1, 2);
 
-            Console.WriteLine(numberOfTrees);
+            var numberOfTree = numberOfTreesOne * numberOfTreesTwo * numberOfTreesThree * numberOfTreesFour * numberOfTreesFive;
+
+            Console.WriteLine(numberOfTree);
         }
 
         public static List<string> GetRawData()
